@@ -28,40 +28,49 @@
 ///
 /// edit_distance("kitten", "sitting"); // => 3
 /// ```
-pub fn edit_distance(a: &str, b: &str) -> i32 {
-
+pub fn edit_distance(a: &str, b: &str) -> usize {
+    let len_a = a.chars().count();
+    let len_b = b.chars().count();
+    if len_a < len_b {
+        return edit_distance(b, a);
+    }
     // handle special case of 0 length
-    if a.len() == 0 {
-        return b.chars().count() as i32
-    } else if b.len() == 0 {
-        return a.chars().count() as i32
+    if len_a == 0 {
+        return len_b;
+    } else if len_b == 0 {
+        return len_a;
     }
 
-    let len_b = b.chars().count() + 1;
+    let len_b = len_b + 1;
 
-    let mut pre = vec![0; len_b];
+    let mut pre;
+    let mut tmp;
     let mut cur = vec![0; len_b];
 
     // initialize string b
     for i in 1..len_b {
-        pre[i] = i as i32;
+        cur[i] = i;
     }
 
     // calculate edit distance
-    for (i,ca) in a.chars().enumerate() {
+    for (i, ca) in a.chars().enumerate() {
         // get first column for this row
-        cur[0] = (i as i32) + 1;
+        pre = cur[0];
+        cur[0] = i + 1;
         for (j, cb) in b.chars().enumerate() {
+            tmp = cur[j + 1];
             cur[j + 1] = std::cmp::min(
                 // deletion
-                pre[j + 1] + 1, std::cmp::min(
-                // insertion
-                cur[j] + 1,
-                // match or substitution
-                pre[j] + if ca == cb { 0 } else { 1 }));
+                tmp + 1,
+                std::cmp::min(
+                    // insertion
+                    cur[j] + 1,
+                    // match or substitution
+                    pre + if ca == cb { 0 } else { 1 },
+                ),
+            );
+            pre = tmp;
         }
-        std::mem::swap(&mut cur, &mut pre);
     }
-
-    pre[len_b - 1]
+    cur[len_b - 1]
 }
